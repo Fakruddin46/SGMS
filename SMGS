@@ -1,0 +1,65 @@
+#include <Servo.h>
+#include <ESP8266WiFi.h>
+#include <WiFiClientSecure.h>
+#include <UniversalTelegramBot.h>
+#include <ArduinoJson.h>
+
+#define token "7406113357:AAEFIEibyRvggtuz@ARSM6POD3YAjvbcmdM"
+#define chatid "6453802223"
+const char* ssid = "ajeez11";
+const char* password = "786143123";
+int IR = D3;
+const int trigPin = D5;
+const int echoPin = D6;
+unsigned mychannelnumber = 2609846;
+const char* myapi = "ROR6FOR9IMICD1ZG";
+
+Servo servo;
+WiFiClientSecure client;
+UniversalTelegramBot bot(token, client);
+
+void setup() {
+    Serial.begin(115200);
+    servo.attach(5); //D1
+    servo.write(0);
+    pinMode(IR, INPUT);
+    pinMode(trigPin, OUTPUT);
+    pinMode(echoPin, INPUT);
+    delay(2000);
+    configTime(0, 0, "pool.ntp.org");
+    X509List cert(TELEGRAM_CERTIFICATE_ROOT);
+    WiFi.begin(ssid, password);
+    Serial.print("Connecting to WiFi...");
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(1000);
+        Serial.print(".");
+    }
+    Serial.println("Connected to WiFi");
+
+    // Connect to Telegram bot
+    client.setInsecure();
+}
+void loop() {
+    int IRState = digitalRead(IR);
+    if (IRState == 0) {
+        Serial.println("Garbage door is opening");
+        servo.write(180);
+        delay(2000);
+        Serial.println("Garbage door is Closing");
+        servo.write(0);
+    }
+
+    delay(1000);
+
+    digitalWrite(trigPin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPin, LOW);
+    int duration = pulseIn(echoPin, HIGH);
+    int distance = duration * 0.034 / 2;
+
+    if (distance <= 20) {
+        Serial.println("Garbage is full");
+        bot.sendMessage(chatid, "Garbage is full, Please Collect");
+    }
+}
+
